@@ -45,6 +45,7 @@ namespace GEDMatcher
             List<String> matchedSSNs = new List<string>();
             Dictionary<Tuple<String, String>, int> scores = new Dictionary<Tuple<string, string>, int>();
             Dictionary<String, String> studentInfo = new Dictionary<string, string>();
+            Dictionary<String, DateTime> achievedDiploma = new Dictionary<string, DateTime>();
 
             file.ReadLine();
 
@@ -97,7 +98,7 @@ namespace GEDMatcher
                 }
 
                 totalScore = int.Parse(m[22].Value);
-                                                                                           
+                                                                                                          
                 comm = new SqlCommand("SELECT                                                                                   "
                                       +" *                                                                                      "
                                       +" FROM                                                                                   "
@@ -141,7 +142,12 @@ namespace GEDMatcher
                     {
                         if (!studentInfo.ContainsKey(curSSN))
                         {
-                            studentInfo.Add(curSSN, curSSN + "," + dbFirstName + "," + dbMiddleName + "," + lastName + "," + DOB);
+                            studentInfo.Add(curSSN, curSSN + "," + dbFirstName + "," + dbMiddleName + "," + lastName + "," + birthDate.ToString("MM/DD/YYYY"));
+                        }
+
+                        if (!achievedDiploma.ContainsKey(curSSN) && !String.IsNullOrEmpty(m[23].Value))
+                        {
+                            achievedDiploma.Add(curSSN, DateTime.Parse(m[23].Value));
                         }
                         matchFound = true;
                         break;
@@ -212,6 +218,8 @@ namespace GEDMatcher
             String[] studentSSNs = new string[studentInfo.Keys.Count];
             studentInfo.Keys.CopyTo(studentSSNs, 0);
 
+            matches.WriteLine("Student ID,First Name,Middle Name,Last Name,Birth Date,Language Arts Score,Math Score,Science Score,Social Studies Score,Achieved Diploma Date");
+
             foreach (String SSN in studentSSNs)
             {
                 Tuple<String, String> LAKey = new Tuple<string, string>(SSN, "LA");
@@ -230,6 +238,8 @@ namespace GEDMatcher
                 row += scores.ContainsKey(SCKey) ? scores[SCKey] : 0;
                 row += ",";
                 row += scores.ContainsKey(SSKey) ? scores[SSKey] : 0;
+                row += ",";
+                row += achievedDiploma.ContainsKey(SSN) ? achievedDiploma[SSN].ToString("MM/DD/YYYY") : "";
 
                 matches.WriteLine(row);
             }
