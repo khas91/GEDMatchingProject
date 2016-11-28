@@ -142,7 +142,7 @@ namespace GEDMatcher
                     {
                         if (!studentInfo.ContainsKey(curSSN))
                         {
-                            studentInfo.Add(curSSN, curSSN + "," + dbFirstName + "," + dbMiddleName + "," + lastName + "," + birthDate.ToString("MM/DD/YYYY"));
+                            studentInfo.Add(curSSN, curSSN + "," + dbFirstName + "," + dbMiddleName + "," + lastName + "," + birthDate.ToString("MM/dd/yyyy"));
                         }
 
                         if (!achievedDiploma.ContainsKey(curSSN) && !String.IsNullOrEmpty(m[23].Value))
@@ -239,7 +239,7 @@ namespace GEDMatcher
                 row += ",";
                 row += scores.ContainsKey(SSKey) ? scores[SSKey] : 0;
                 row += ",";
-                row += achievedDiploma.ContainsKey(SSN) ? achievedDiploma[SSN].ToString("MM/DD/YYYY") : "";
+                row += achievedDiploma.ContainsKey(SSN) ? achievedDiploma[SSN].ToString("MM/dd/yyyy") : "";
 
                 matches.WriteLine(row);
             }
