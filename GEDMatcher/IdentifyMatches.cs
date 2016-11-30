@@ -58,7 +58,7 @@ namespace GEDMatcher
                 MatchCollection m = re.Matches(file.ReadLine(), 0);
 
                 String lastName = m[1].Value.Replace("'", "");
-                String firstName = m[2].Value;
+                String firstName = m[2].Value.Replace("'", "");
                 String middleName = m[3].Value;
                 String suffix = m[4].Value;
                 String SSN = m[5].Value.Substring(0, m[5].Value.Length <= 4 ? 0 : 4);
@@ -99,14 +99,17 @@ namespace GEDMatcher
 
                 totalScore = int.Parse(m[22].Value);
                                                                                                           
-                comm = new SqlCommand("SELECT                                                                                   "
-                                      +" *                                                                                      "
-                                      +" FROM                                                                                   "
-                                      +"    MIS.dbo.ST_STDNT_A_125 stdnt                                                        "
-                                      + "   INNER JOIN MIS.dbo.ST_ADDRESSES_A_153 addr ON addr.STUDENT_ID = stdnt.STUDENT_SSN   "
-                                      +" WHERE                                                                                  "
-                                      +"    stdnt.LST_NM = '" + lastName + "'                                                   "
-                                      +"    AND stdnt.DOB = '" + DOB + "'                                                       "
+                comm = new SqlCommand("SELECT                                                                                          "
+                                      +" xwalk.PS_EMPL_ID                                                                              "
+                                      +" ,stdnt.*,addr.*                                                                               "
+                                      +" FROM                                                                                          "
+                                      +"    MIS.dbo.ST_STDNT_A_125 stdnt                                                               "
+                                      +"    INNER JOIN MIS.dbo.ST_ADDRESSES_A_153 addr ON addr.STUDENT_ID = stdnt.STUDENT_SSN          "
+                                      +"    INNER JOIN MIS.dbo.ST_STDNT_SSN_SID_XWALK_606 xwalk ON xwalk.STUDENT_SSN = stdnt.STUDENT_ID"
+                                      +" WHERE                                                                                         "
+                                      +"    (stdnt.LST_NM = '" + lastName + "'                                                         "
+                                      +"    OR stdnt.FRST_NM = '" + firstName + "')                                                    "
+                                      +"    AND stdnt.DOB = '" + DOB + "'                                                              "
                                       +"    AND stdnt.SEX = '" + gender + "'", conn);
 
                 reader = comm.ExecuteReader();
@@ -117,10 +120,16 @@ namespace GEDMatcher
                 while (reader.Read())
                 {
                     curSSN = reader["STUDENT_SSN"].ToString();
-                    
+
+                    String dbLastName = reader["LST_NM"].ToString();
                     String dbFirstName = reader["FRST_NM"].ToString();
                     String dbMiddleName = reader["MDL_NM"].ToString();
                     String dbAddr = reader["STREET_1"].ToString();
+                    String fscjEmail = reader["FCCJ_EMAIL_ADDR"].ToString();
+                    String dbEmail = reader["EMAIL_ADDR"].ToString();
+                    String dbphone = reader["HM_PHN"].ToString();
+                    String workPhone = reader["WRK_PHN"].ToString();
+                    String emplID = reader["PS_EMPL_ID"].ToString();
 
                     double firstNameCoeff = dbFirstName == firstName ? 1 : 1 / levenshtein(dbFirstName, firstName);
                     double middleNameCoeff =  dbMiddleName == middleName ? 1 : 1 / levenshtein(dbMiddleName, middleName);
@@ -142,7 +151,8 @@ namespace GEDMatcher
                     {
                         if (!studentInfo.ContainsKey(curSSN))
                         {
-                            studentInfo.Add(curSSN, curSSN + "," + dbFirstName + "," + dbMiddleName + "," + lastName + "," + birthDate.ToString("MM/dd/yyyy"));
+                            studentInfo.Add(curSSN, curSSN + "," + emplID + "," + dbFirstName + "," + dbMiddleName + "," + lastName +
+                                "," + birthDate.ToString("MM/dd/yyyy") + "," + fscjEmail + "," + dbEmail + "," + dbphone + "," + workPhone);
                         }
 
                         if (!achievedDiploma.ContainsKey(curSSN) && !String.IsNullOrEmpty(m[23].Value))
@@ -218,7 +228,8 @@ namespace GEDMatcher
             String[] studentSSNs = new string[studentInfo.Keys.Count];
             studentInfo.Keys.CopyTo(studentSSNs, 0);
 
-            matches.WriteLine("Student ID,First Name,Middle Name,Last Name,Birth Date,Language Arts Score,Math Score,Science Score,Social Studies Score,Achieved Diploma Date");
+            matches.WriteLine("Student ID,EmplID,First Name,Middle Name,Last Name,Birth Date,Personal Email,FSCJ Email,"
+                            +"Personal Email,Phone 1,Phone 2,Language Arts Score,Math Score,Science Score,Social Studies Score,Achieved Diploma Date");
 
             foreach (String SSN in studentSSNs)
             {
