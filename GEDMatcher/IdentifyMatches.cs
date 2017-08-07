@@ -11,9 +11,8 @@ namespace GEDMatcher
 {
     class IdentifyMatches
     {
-        static void Main(string[] args)
-        {
-            
+        static void main(string[] args)
+        {            
             const double firstNameFactor = 1.0; 
             const double middleNameFactor = .2;
             const double suffixFactor = .1;
@@ -74,43 +73,84 @@ namespace GEDMatcher
                 DateTime birthDate = DateTime.Parse(DOB);
                 DOB = birthDate.ToString("yyyyMMdd");
 
-                int LAScore = 0;
+                int REScore = 0;
+                int WRScore = 0;
                 int MAScore = 0;
                 int SCScore = 0;
                 int SSScore = 0;
                 int totalScore;
 
+                //Newer GED form, older ones had a Reading and Writing section. Newer ones consolodated both into "Language Arts"
+                //int LAScore = 0;
+                //int MAScore = 0;
+                //int SCScore = 0;
+                //int SSScore = 0;
+                //int totalScore;
+
+                
+                //int LAScore = 0;
+                //int MAScore = 0;
+                //int SCScore = 0;
+                //int SSScore = 0;
+                //int totalScore;
+
+
+                //if (!String.IsNullOrEmpty(m[18].Value))
+                //{
+                //    LAScore = int.Parse(m[18].Value);
+                //}
+                //if (!String.IsNullOrEmpty(m[19].Value))
+                //{
+                //    MAScore = int.Parse(m[19].Value);
+                //}
+                //if (!String.IsNullOrEmpty(m[20].Value))
+                //{
+                //    SCScore = int.Parse(m[20].Value);
+                //}
+                //if (!String.IsNullOrEmpty(m[21].Value))
+                //{
+                //    SSScore = int.Parse(m[21].Value);
+                //}
+
+                //if (!String.IsNullOrEmpty(m[18].Value))
+                //{
+                //    LAScore = int.Parse(m[18].Value);
+                //}
                 if (!String.IsNullOrEmpty(m[18].Value))
                 {
-                    LAScore = int.Parse(m[18].Value);
+                    REScore = int.Parse(m[18].Value);
                 }
                 if (!String.IsNullOrEmpty(m[19].Value))
                 {
-                    MAScore = int.Parse(m[19].Value);
+                    WRScore = int.Parse(m[19].Value);
                 }
                 if (!String.IsNullOrEmpty(m[20].Value))
                 {
-                    SCScore = int.Parse(m[20].Value);
+                    MAScore = int.Parse(m[20].Value);
                 }
                 if (!String.IsNullOrEmpty(m[21].Value))
                 {
-                    SSScore = int.Parse(m[21].Value);
+                    SCScore = int.Parse(m[21].Value);
+                }
+                if (!String.IsNullOrEmpty(m[22].Value))
+                {
+                    SSScore = int.Parse(m[22].Value);
                 }
 
-                totalScore = int.Parse(m[22].Value);
+                totalScore = int.Parse(m[23].Value);
                                                                                                           
-                comm = new SqlCommand("SELECT                                                                                          "
-                                      +" xwalk.PS_EMPL_ID                                                                              "
-                                      +" ,stdnt.*,addr.*                                                                               "
-                                      +" FROM                                                                                          "
-                                      +"    MIS.dbo.ST_STDNT_A_125 stdnt                                                               "
-                                      +"    INNER JOIN MIS.dbo.ST_ADDRESSES_A_153 addr ON addr.STUDENT_ID = stdnt.STUDENT_SSN          "
-                                      +"    INNER JOIN MIS.dbo.ST_STDNT_SSN_SID_XWALK_606 xwalk ON xwalk.STUDENT_SSN = stdnt.STUDENT_ID"
-                                      +" WHERE                                                                                         "
-                                      +"    (stdnt.LST_NM = '" + lastName + "'                                                         "
-                                      +"    OR stdnt.FRST_NM = '" + firstName + "')                                                    "
-                                      +"    AND stdnt.DOB = '" + DOB + "'                                                              "
-                                      +"    AND stdnt.SEX = '" + gender + "'", conn);
+                comm = new SqlCommand(@"SELECT                                                                                        
+                                       xwalk.PS_EMPL_ID                                                                              
+                                       ,stdnt.*,addr.*                                                                               
+                                       FROM                                                                                          
+                                          MIS.dbo.ST_STDNT_A_125 stdnt                                                               
+                                          INNER JOIN MIS.dbo.ST_ADDRESSES_A_153 addr ON addr.STUDENT_ID = stdnt.STUDENT_SSN          
+                                          INNER JOIN MIS.dbo.ST_STDNT_SSN_SID_XWALK_606 xwalk ON xwalk.STUDENT_SSN = stdnt.STUDENT_ID
+                                       WHERE                                                                                         
+                                          (stdnt.LST_NM = '" + lastName + @"'                                                         
+                                          OR stdnt.FRST_NM = '" + firstName + @"')                                                    
+                                          AND stdnt.DOB = '" + DOB + @"'                                                              
+                                          AND stdnt.SEX = '" + gender.Substring(0, 1) + "'", conn);
 
                 reader = comm.ExecuteReader();
 
@@ -166,17 +206,43 @@ namespace GEDMatcher
 
                 if (matchFound)
                 {
-                    if (LAScore > 0)
+                    //if (LAScore > 0)
+                    //{
+                    //    Tuple<String, String> key = new Tuple<string, string>(curSSN, "LA");
+
+                    //    if (!scores.ContainsKey(key))
+                    //    {
+                    //        scores.Add(key, LAScore);
+                    //    }
+                    //    else if (LAScore > scores[key])
+                    //    {
+                    //        scores[key] = LAScore;
+                    //    }
+                    //}
+                    if (REScore > 0)
                     {
                         Tuple<String, String> key = new Tuple<string, string>(curSSN, "LA");
 
                         if (!scores.ContainsKey(key))
                         {
-                            scores.Add(key, LAScore);
+                            scores.Add(key, REScore);
                         }
-                        else if (LAScore > scores[key])
+                        else if (REScore > scores[key])
                         {
-                            scores[key] = LAScore;
+                            scores[key] = REScore;
+                        }
+                    }
+                    if (WRScore > 0)
+                    {
+                        Tuple<String, String> key = new Tuple<string, string>(curSSN, "LA");
+
+                        if (!scores.ContainsKey(key))
+                        {
+                            scores.Add(key, WRScore);
+                        }
+                        else if (WRScore > scores[key])
+                        {
+                            scores[key] = REScore;
                         }
                     }
                     if (MAScore > 0)
